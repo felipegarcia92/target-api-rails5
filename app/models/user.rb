@@ -3,7 +3,7 @@
 # Table name: users
 #
 #  id                     :integer          not null, primary key
-#  email                  :string           default(""), not null
+#  email                  :string
 #  encrypted_password     :string           default(""), not null
 #  reset_password_token   :string
 #  reset_password_sent_at :datetime
@@ -36,11 +36,16 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :trackable, :validatable
   include DeviseTokenAuth::Concerns::User
 
-  validates :email, uniqueness: true
+  validates :uid, uniqueness: { scope: :provider }
+  validates :email, uniqueness: true, if: :uses_email?
 
   def full_name
     return username unless first_name.present?
     "#{first_name} #{last_name}"
+  end
+
+  def uses_email?
+    provider == 'email' || !email.nil?
   end
 
   def self.from_social_provider(provider, user_params)
